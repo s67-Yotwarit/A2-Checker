@@ -5,6 +5,23 @@ class Checkers:
     def __init__(self, master):
         self.master = master
         self.master.title("เกมหมากฮอส")
+        self.board = [[0] * 8 for _ in range(8)]  # 0 = ช่องว่าง, 1 = หมากแดง, 2 = หมากน้ำเงิน
+        self.current_player = "แดง"
+        self.selected_piece = None
+        self.red_score = 0
+        self.blue_score = 0
+
+        self.create_board()
+
+    def create_board(self):
+        self.buttons = [[None] * 8 for _ in range(8)]
+        for row in range(8):
+            for col in range(8):
+                color = "lightgray" if (row + col) % 2 == 0 else "darkgray"
+                button = tk.Button(self.master, width=6, height=3, bg=color,
+                                   command=lambda r=row, c=col: self.on_click(r, c))
+                button.grid(row=row, column=col)
+                self.buttons[row][col] = button
 
 
 if __name__ == "__main__":
