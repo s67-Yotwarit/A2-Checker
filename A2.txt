@@ -22,7 +22,22 @@ class Checkers:
                                    command=lambda r=row, c=col: self.on_click(r, c))
                 button.grid(row=row, column=col)
                 self.buttons[row][col] = button
+            
+            self.initialize_pieces() 
+    
+    def initialize_pieces(self):
+        for row in range(2):
+            for col in range(8):
+                if (row + col) % 2 == 1:
+                    self.board[row][col] = 1  # หมายเลข 1 แทนหมากแดง
+                    self.buttons[row][col].config(text="🔴", fg="red")
 
+        for row in range(6, 8):
+            for col in range(8):
+                if (row + col) % 2 == 1:
+                    self.board[row][col] = 2  # หมายเลข 2 แทนหมากน้ำเงิน
+                    self.buttons[row][col].config(text="🔵", fg="blue")
+   
 
 if __name__ == "__main__":
     root = tk.Tk()
