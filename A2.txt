@@ -21,6 +21,12 @@ class Checkers:
         self.score_label = tk.Label(self.master, text=f"แดง: {self.red_score}   น้ำเงิน: {self.blue_score}", font=('Arial', 14))
         self.score_label.grid(row=9, column=0, columnspan=8)
 
+        # เพิ่มปุ่มสำหรับการเซฟและโหลดเกม
+        self.save_button = tk.Button(self.master, text="เซฟเกม", command=self.save_game)
+        self.save_button.grid(row=10, column=0, columnspan=4)
+        self.load_button = tk.Button(self.master, text="โหลดเกม", command=self.load_game)
+        self.load_button.grid(row=10, column=4, columnspan=4)
+
     def create_board(self):
         self.buttons = [[None] * 8 for _ in range(8)]
         for row in range(8):
@@ -39,6 +45,7 @@ class Checkers:
         self.initialize_pieces() 
     
     def initialize_pieces(self):
+        # กำหนดตำแหน่งเริ่มต้นของหมาก
         for row in range(2):
             for col in range(8):
                 if (row + col) % 2 == 1:
@@ -52,6 +59,7 @@ class Checkers:
                     self.buttons[row][col].config(text="🔵", fg="blue")
 
     def highlight_valid_moves(self):
+        # ไฮไลท์ช่องที่สามารถเดินได้
         if self.selected_piece:
             start_row, start_col = self.selected_piece
             piece = self.board[start_row][start_col]
@@ -160,14 +168,84 @@ class Checkers:
             if self.current_player == "แดง":
                 self.red_score += 1
             else:
-               self.blue_score += 1
+                self.blue_score += 1
 
         self.update_score_display()
 
-    # เพิ่มคะแนนหลังจากการกินหมาก
     def update_score_display(self):
         # อัปเดตคะแนนใน Label
         self.score_label.config(text=f"แดง: {self.red_score}   น้ำเงิน: {self.blue_score}")
+
+    def save_game(self):
+        # เซฟสถานะเกมลงไฟล์ .txt
+        game_data = {
+            "board": self.board,
+            "current_player": self.current_player,
+            "red_score": self.red_score,
+            "blue_score": self.blue_score
+        }
+
+        # ใช้ file dialog เพื่อเลือกตำแหน่งบันทึกไฟล์
+        file_path = filedialog.asksaveasfilename(defaultextension=".txt", filetypes=[("Text files", "*.txt")])
+        if file_path:
+            try:
+                with open(file_path, "w", encoding="utf-8") as file:  # ระบุ encoding เป็น 'utf-8'
+                    # เขียนข้อมูลเกมลงในไฟล์
+                    file.write(f"Current Player: {self.current_player}\n")
+                    file.write(f"Red Score: {self.red_score}\n")
+                    file.write(f"Blue Score: {self.blue_score}\n")
+                    file.write("Board:\n")
+                    
+                    # เขียนบอร์ดลงในไฟล์
+                    for row in self.board:
+                        file.write(" ".join(map(str, row)) + "\n")  # เขียนแถวของบอร์ดเป็นข้อความ
+                    
+                    messagebox.showinfo("สำเร็จ", "เซฟเกมเสร็จสิ้น")
+            except Exception as e:
+                messagebox.showerror("เกิดข้อผิดพลาด", f"ไม่สามารถบันทึกไฟล์ได้: {e}")
+        else:
+            messagebox.showwarning("ไม่ได้เลือกไฟล์", "โปรดเลือกตำแหน่งในการบันทึกไฟล์")
+
+    def load_game(self):
+        # โหลดสถานะเกมจากไฟล์ .txt
+        file_path = filedialog.askopenfilename(defaultextension=".txt", filetypes=[("Text files", "*.txt")])
+        if file_path:
+            try:
+                with open(file_path, "r", encoding="utf-8") as file:  # ระบุ encoding เป็น 'utf-8'
+                    lines = file.readlines()  # อ่านข้อมูลทั้งหมดในไฟล์
+
+                # แยกข้อมูลจากไฟล์
+                self.current_player = lines[0].strip().split(": ")[1]  # อ่าน Current Player
+                self.red_score = int(lines[1].strip().split(": ")[1])  # อ่าน Red Score
+                self.blue_score = int(lines[2].strip().split(": ")[1])  # อ่าน Blue Score
+
+                # โหลดข้อมูลบอร์ด
+                self.board = []
+                for line in lines[4:]:  # ข้ามบรรทัดที่เป็นหัวข้อ "Board:"
+                    row = list(map(int, line.strip().split()))  # แปลงบรรทัดเป็นแถวของบอร์ด
+                    self.board.append(row)
+
+                # รีเฟรช UI
+                self.update_score_display()  # อัปเดตคะแนนใน UI
+                self.turn_label.config(text=f"ตาผู้เล่น: {self.current_player}")  # อัปเดตตาผู้เล่น
+
+                # อัปเดต UI ของบอร์ด
+                for row in range(8):
+                    for col in range(8):
+                        piece = self.board[row][col]
+                        if piece == 1:
+                            self.buttons[row][col].config(text="🔴", fg="red")  # หมากแดง
+                        elif piece == 2:
+                            self.buttons[row][col].config(text="🔵", fg="blue")  # หมากน้ำเงิน
+                        else:
+                            self.buttons[row][col].config(text="", bg="lightgray" if (row + col) % 2 == 0 else "darkgray")
+
+                messagebox.showinfo("สำเร็จ", "โหลดเกมเสร็จสิ้น")  # แสดงข้อความเมื่อโหลดเกมเสร็จ
+
+            except Exception as e:
+                messagebox.showerror("เกิดข้อผิดพลาด", f"ไม่สามารถโหลดไฟล์ได้: {e}")  # แจ้งข้อผิดพลาด
+        else:
+            messagebox.showwarning("ไม่ได้เลือกไฟล์", "โปรดเลือกไฟล์ที่ต้องการโหลด")
 
 if __name__ == "__main__":
     root = tk.Tk()
