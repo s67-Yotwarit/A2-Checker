@@ -17,9 +17,14 @@ class Checkers:
         self.buttons = [[None] * 8 for _ in range(8)]
         for row in range(8):
             for col in range(8):
-                color = "lightgray" if (row + col) % 2 == 0 else "darkgray"
-                button = tk.Button(self.master, width=6, height=3, bg=color,
-                                   command=lambda r=row, c=col: self.on_click(r, c))
+                if (row + col) % 2 == 1:
+                    color = "darkgray"  # สีที่สามารถเล่นได้
+                    button = tk.Button(self.master, width=6, height=3, bg=color,
+                                       command=lambda r=row, c=col: self.on_click(r, c))
+                else:
+                    color = "lightgray"  # สีที่ไม่สามารถเล่นได้
+                    button = tk.Button(self.master, width=6, height=3, bg=color, state=tk.DISABLED)
+
                 button.grid(row=row, column=col)
                 self.buttons[row][col] = button
             
