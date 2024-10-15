@@ -13,6 +13,14 @@ class Checkers:
 
         self.create_board()
 
+        # เพิ่ม Label แสดงตาผู้เล่น
+        self.turn_label = tk.Label(self.master, text=f"ตาผู้เล่น: {self.current_player}", font=('Arial', 16))
+        self.turn_label.grid(row=8, column=0, columnspan=8)
+
+        # เพิ่ม Label แสดงคะแนน
+        self.score_label = tk.Label(self.master, text=f"แดง: {self.red_score}   น้ำเงิน: {self.blue_score}", font=('Arial', 14))
+        self.score_label.grid(row=9, column=0, columnspan=8)
+
     def create_board(self):
         self.buttons = [[None] * 8 for _ in range(8)]
         for row in range(8):
@@ -48,6 +56,7 @@ class Checkers:
             if self.is_valid_move(row, col):
                 self.move_piece(row, col)
                 self.current_player = "น้ำเงิน" if self.current_player == "แดง" else "แดง"
+                self.turn_label.config(text=f"ตาผู้เล่น: {self.current_player}")
                 self.selected_piece = None
         else:
             if self.board[row][col] == 1 and self.current_player == "แดง":
@@ -98,6 +107,18 @@ class Checkers:
             mid_col = (start_col + col) // 2
             self.board[mid_row][mid_col] = 0  # อัปเดตช่องที่ถูกกินเป็นช่องว่าง
             self.buttons[mid_row][mid_col].config(text="", bg="lightgray" if (mid_row + mid_col) % 2 == 0 else "darkgray")
+
+    # เพิ่มคะแนนหลังจากการกินหมาก
+            if self.current_player == "แดง":
+                self.red_score += 1
+            else:
+                self.blue_score += 1
+
+        self.update_score_display()
+
+    def update_score_display(self):
+        # อัปเดตคะแนนใน Label
+        self.score_label.config(text=f"แดง: {self.red_score}   น้ำเงิน: {self.blue_score}")
 
 if __name__ == "__main__":
     root = tk.Tk()
