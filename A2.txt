@@ -156,6 +156,12 @@ class Checkers:
             self.board[mid_row][mid_col] = 0  # อัปเดตช่องที่ถูกกินเป็นช่องว่าง
             self.buttons[mid_row][mid_col].config(text="", bg="lightgray" if (mid_row + mid_col) % 2 == 0 else "darkgray")
 
+        # เพิ่มคะแนนหลังจากการกินหมาก
+            if self.current_player == "แดง":
+                self.red_score += 1
+            else:
+               self.blue_score += 1
+
         self.update_score_display()
 
     # เพิ่มคะแนนหลังจากการกินหมาก
