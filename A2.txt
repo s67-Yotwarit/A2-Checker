@@ -42,7 +42,18 @@ class Checkers:
                 if (row + col) % 2 == 1:
                     self.board[row][col] = 2  # หมายเลข 2 แทนหมากน้ำเงิน
                     self.buttons[row][col].config(text="🔵", fg="blue")
-   
+     
+    def on_click(self, row, col):
+        if self.selected_piece:
+            if self.is_valid_move(row, col):
+                self.move_piece(row, col)
+                self.current_player = "น้ำเงิน" if self.current_player == "แดง" else "แดง"
+                self.selected_piece = None
+        else:
+            if self.board[row][col] == 1 and self.current_player == "แดง":
+                self.selected_piece = (row, col)
+            elif self.board[row][col] == 2 and self.current_player == "น้ำเงิน":
+                self.selected_piece = (row, col)
 
 if __name__ == "__main__":
     root = tk.Tk()
