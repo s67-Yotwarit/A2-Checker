@@ -80,6 +80,25 @@ class Checkers:
 
         return False
 
+    def move_piece(self, row, col):
+        start_row, start_col = self.selected_piece
+        piece = self.board[start_row][start_col]
+
+        # อัปเดตบอร์ด
+        self.board[start_row][start_col] = 0  # ช่องว่าง
+        self.board[row][col] = piece
+
+        # อัปเดต UI
+        self.buttons[start_row][start_col].config(text="", bg="lightgray" if (start_row + start_col) % 2 == 0 else "darkgray")
+        self.buttons[row][col].config(text="🔴" if piece == 1 else "🔵", fg="red" if piece == 1 else "blue")
+
+        # ถ้ากินหมากต้องอัปเดตตำแหน่งที่กิน
+        if abs(row - start_row) == 2:
+            mid_row = (start_row + row) // 2
+            mid_col = (start_col + col) // 2
+            self.board[mid_row][mid_col] = 0  # อัปเดตช่องที่ถูกกินเป็นช่องว่าง
+            self.buttons[mid_row][mid_col].config(text="", bg="lightgray" if (mid_row + mid_col) % 2 == 0 else "darkgray")
+
 if __name__ == "__main__":
     root = tk.Tk()
     game = Checkers(root)
