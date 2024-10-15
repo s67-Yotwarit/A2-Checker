@@ -51,14 +51,30 @@ class Checkers:
                     self.board[row][col] = 2  # หมายเลข 2 แทนหมากน้ำเงิน
                     self.buttons[row][col].config(text="🔵", fg="blue")
      
+    def unselect_piece(self):
+        # ยกเลิกการเลือกหมาก
+        self.selected_piece = None
+        # เปลี่ยนสีของปุ่มให้กลับเป็นปกติ
+        for row in range(8):
+            for col in range(8):
+                if (row + col) % 2 == 1:
+                    color = "darkgray"  # ถ้าช่องว่างจะเป็นสีมืด
+                    self.buttons[row][col].config(bg=color)
+
     def on_click(self, row, col):
         if self.selected_piece:
-            if self.is_valid_move(row, col):
+            # หากผู้เล่นคลิกที่ตำแหน่งเดียวกับหมากที่เลือกแล้ว
+            if (row, col) == self.selected_piece:
+                # ยกเลิกการเลือก
+                self.unselect_piece()
+            elif self.is_valid_move(row, col):
+                # หากคลิกที่ช่องใหม่และเป็นการเคลื่อนที่ที่ถูกต้อง
                 self.move_piece(row, col)
                 self.current_player = "น้ำเงิน" if self.current_player == "แดง" else "แดง"
                 self.turn_label.config(text=f"ตาผู้เล่น: {self.current_player}")
                 self.selected_piece = None
         else:
+            # หากไม่มีหมากที่ถูกเลือก
             if self.board[row][col] == 1 and self.current_player == "แดง":
                 self.selected_piece = (row, col)
             elif self.board[row][col] == 2 and self.current_player == "น้ำเงิน":
