@@ -28,7 +28,7 @@ class Checkers:
                 button.grid(row=row, column=col)
                 self.buttons[row][col] = button
             
-            self.initialize_pieces() 
+        self.initialize_pieces() 
     
     def initialize_pieces(self):
         for row in range(2):
