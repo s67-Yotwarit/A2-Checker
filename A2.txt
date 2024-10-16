@@ -107,6 +107,7 @@ class Checkers:
             elif self.is_valid_move(row, col):
                 # หากคลิกที่ช่องใหม่และเป็นการเคลื่อนที่ที่ถูกต้อง
                 self.move_piece(row, col)
+                self.check_for_winner()
                 self.current_player = "น้ำเงิน" if self.current_player == "แดง" else "แดง"
                 self.turn_label.config(text=f"ตาผู้เล่น: {self.current_player}")
                 self.selected_piece = None
@@ -175,6 +176,26 @@ class Checkers:
     def update_score_display(self):
         # อัปเดตคะแนนใน Label
         self.score_label.config(text=f"แดง: {self.red_score}   น้ำเงิน: {self.blue_score}")
+
+    def check_for_winner(self):
+        red_count = sum(piece == 1 for row in self.board for piece in row)
+        blue_count = sum(piece == 2 for row in self.board for piece in row)
+
+        if red_count == 0:
+            messagebox.showinfo("ผู้ชนะ", "ผู้เล่นน้ำเงินชนะ!")
+            self.reset_game()
+        elif blue_count == 0:
+            messagebox.showinfo("ผู้ชนะ", "ผู้เล่นแดงชนะ!")
+            self.reset_game()
+
+    def reset_game(self):
+        self.create_board()
+        self.current_player = "แดง"
+        self.selected_piece = None
+        self.red_score = 0
+        self.blue_score = 0
+        self.score_label.config(text=f"คะแนน: แดง {self.red_score} - น้ำเงิน {self.blue_score}")
+        self.initialize_pieces()
 
     def save_game(self):
         # เซฟสถานะเกมลงไฟล์ .txt
