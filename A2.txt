@@ -5,7 +5,7 @@ class Checkers:
     def __init__(self, master):
         self.master = master
         self.master.title("เกมหมากฮอส")
-        self.board = [[0] * 8 for _ in range(8)]  # 0 = ช่องว่าง, 1 = หมากแดง, 2 = หมากน้ำเงิน
+        self.board = [[0] * 8 for _ in range(8)]
         self.current_player = "แดง"
         self.selected_piece = None
         self.red_score = 0
@@ -13,15 +13,12 @@ class Checkers:
 
         self.create_board()
 
-        # เพิ่ม Label แสดงตาผู้เล่น
         self.turn_label = tk.Label(self.master, text=f"ตาผู้เล่น: {self.current_player}", font=('Arial', 16))
         self.turn_label.grid(row=8, column=0, columnspan=8)
 
-        # เพิ่ม Label แสดงคะแนน
         self.score_label = tk.Label(self.master, text=f"แดง: {self.red_score}   น้ำเงิน: {self.blue_score}", font=('Arial', 14))
         self.score_label.grid(row=9, column=0, columnspan=8)
 
-        # เพิ่มปุ่มสำหรับการเซฟและโหลดเกม
         self.save_button = tk.Button(self.master, text="เซฟเกม", command=self.save_game)
         self.save_button.grid(row=10, column=0, columnspan=4)
         self.load_button = tk.Button(self.master, text="โหลดเกม", command=self.load_game)
@@ -32,94 +29,107 @@ class Checkers:
         for row in range(8):
             for col in range(8):
                 if (row + col) % 2 == 1:
-                    color = "darkgray"  # สีที่สามารถเล่นได้
+                    color = "darkgray"
                     button = tk.Button(self.master, width=6, height=3, bg=color,
                                        command=lambda r=row, c=col: self.on_click(r, c))
                 else:
-                    color = "lightgray"  # สีที่ไม่สามารถเล่นได้
+                    color = "lightgray"
                     button = tk.Button(self.master, width=6, height=3, bg=color, state=tk.DISABLED)
 
                 button.grid(row=row, column=col)
                 self.buttons[row][col] = button
             
         self.initialize_pieces() 
-    
+
     def initialize_pieces(self):
-        # กำหนดตำแหน่งเริ่มต้นของหมาก
         for row in range(2):
             for col in range(8):
                 if (row + col) % 2 == 1:
-                    self.board[row][col] = 1  # หมายเลข 1 แทนหมากแดง
+                    self.board[row][col] = 1  # หมากแดง
                     self.buttons[row][col].config(text="🔴", fg="red")
 
         for row in range(6, 8):
             for col in range(8):
                 if (row + col) % 2 == 1:
-                    self.board[row][col] = 2  # หมายเลข 2 แทนหมากน้ำเงิน
+                    self.board[row][col] = 2  # หมากน้ำเงิน
                     self.buttons[row][col].config(text="🔵", fg="blue")
 
     def highlight_valid_moves(self):
-        # ไฮไลท์ช่องที่สามารถเดินได้
         if self.selected_piece:
             start_row, start_col = self.selected_piece
             piece = self.board[start_row][start_col]
-            direction = 1 if piece == 1 else -1  # ทิศทางการเคลื่อนที่
 
-            # ล้างสีทั้งหมดก่อน
             self.reset_button_colors()
 
-            # การเดิน 1 ช่องไปข้างหน้า
-            for dcol in [-1, 1]:  # เดินซ้าย-ขวา
-                row = start_row + direction
-                col = start_col + dcol
-                if 0 <= row < 8 and 0 <= col < 8 and self.board[row][col] == 0:
-                    self.buttons[row][col].config(bg="lightgreen")
-
-            # การกินหมาก (เดิน 2 ช่อง)
-            for dcol in [-1, 1]:  # เดินซ้าย-ขวา
-                row = start_row + 2 * direction
-                col = start_col + 2 * dcol
-                mid_row = start_row + direction
-                mid_col = start_col + dcol
-                if 0 <= row < 8 and 0 <= col < 8 and self.board[row][col] == 0:
-                    if self.board[mid_row][mid_col] != 0 and self.board[mid_row][mid_col] != piece:
+            # การเดินสำหรับหมากธรรมดา
+            if piece in [1, 2]:  # หมากธรรมดา
+                directions = [(1, -1), (1, 1)] if piece == 1 else [(-1, -1), (-1, 1)]  # หมากแดง / น้ำเงิน
+                for drow, dcol in directions:
+                    # การเดิน 1 ช่อง
+                    row, col = start_row + drow, start_col + dcol
+                    if 0 <= row < 8 and 0 <= col < 8 and self.board[row][col] == 0:
                         self.buttons[row][col].config(bg="lightgreen")
 
+                    # การกินหมาก
+                    row += drow
+                    col += dcol
+                    mid_row, mid_col = start_row + drow, start_col + dcol
+                    if 0 <= row < 8 and 0 <= col < 8:
+                        if self.board[row][col] == 0 and self.board[mid_row][mid_col] != 0 and self.board[mid_row][mid_col] != piece:
+                            self.buttons[row][col].config(bg="lightgreen")
+
+            # การเดินสำหรับคิง
+            elif piece in [3, 4]:  # คิง
+                directions = [(-1, -1), (-1, 1), (1, -1), (1, 1)]
+                for drow, dcol in directions:
+                    row, col = start_row, start_col
+                    while True:
+                        row += drow
+                        col += dcol
+                        if 0 <= row < 8 and 0 <= col < 8:
+                            if self.board[row][col] == 0:
+                                self.buttons[row][col].config(bg="lightgreen")
+                            elif self.board[row][col] != piece:  # ตรวจสอบว่ามีหมากของฝ่ายตรงข้ามอยู่
+                                # ตรวจสอบช่องถัดไปเพื่อการกินหมาก
+                                row_next = row + drow
+                                col_next = col + dcol
+                                if 0 <= row_next < 8 and 0 <= col_next < 8 and self.board[row_next][col_next] == 0:
+                                    self.buttons[row_next][col_next].config(bg="lightgreen")
+                                break
+                            else:
+                                break
+                        else:
+                            break
+
     def reset_button_colors(self):
-        # รีเซ็ตสีของปุ่มทั้งหมด
         for row in range(8):
             for col in range(8):
                 if (row + col) % 2 == 1:
-                    self.buttons[row][col].config(bg="darkgray" if (row + col) % 2 == 1 else "lightgray")
+                    self.buttons[row][col].config(bg="darkgray")
+                else:
+                    self.buttons[row][col].config(bg="lightgray")
 
     def unselect_piece(self):
-        # ยกเลิกการเลือกหมาก
         self.selected_piece = None
-        # รีเซ็ตสีของปุ่มทั้งหมด
         self.reset_button_colors()
 
     def on_click(self, row, col):
         if self.selected_piece:
-            # หากผู้เล่นคลิกที่ตำแหน่งเดียวกับหมากที่เลือกแล้ว
             if (row, col) == self.selected_piece:
-                # ยกเลิกการเลือก
                 self.unselect_piece()
             elif self.is_valid_move(row, col):
-                # หากคลิกที่ช่องใหม่และเป็นการเคลื่อนที่ที่ถูกต้อง
                 self.move_piece(row, col)
                 self.check_for_winner()
                 self.current_player = "น้ำเงิน" if self.current_player == "แดง" else "แดง"
                 self.turn_label.config(text=f"ตาผู้เล่น: {self.current_player}")
                 self.selected_piece = None
-                self.reset_button_colors()  # รีเซ็ตสีหลังการเดินหมาก
+                self.reset_button_colors()
         else:
-            # หากไม่มีหมากที่ถูกเลือก
-            if self.board[row][col] == 1 and self.current_player == "แดง":
-                self.selected_piece = (row, col)
-                self.highlight_valid_moves()  # ไฮไลท์ช่องที่สามารถเดินได้
-            elif self.board[row][col] == 2 and self.current_player == "น้ำเงิน":
-                self.selected_piece = (row, col)
-                self.highlight_valid_moves()  # ไฮไลท์ช่องที่สามารถเดินได้
+            if self.board[row][col] in [1, 2, 3, 4]:  # เลือกหมาก
+                if (self.current_player == "แดง" and self.board[row][col] in [1, 3]) or \
+                   (self.current_player == "น้ำเงิน" and self.board[row][col] in [2, 4]):
+                    self.selected_piece = (row, col)
+                    self.highlight_valid_moves()
 
     def is_valid_move(self, row, col):
         if self.selected_piece is None:
@@ -129,22 +139,77 @@ class Checkers:
         piece = self.board[start_row][start_col]
 
         if self.board[row][col] != 0:
-            return False  # ตำแหน่งที่คลิกมีหมากอยู่แล้ว
+            return False
 
-        direction = 1 if piece == 1 else -1  # กำหนดทิศทางของการเคลื่อนที่
+        if piece in [1, 3]:  # ทีมแดง
+            direction = 1 if piece == 1 else -1
+            if direction == 1:  # เคลื่อนที่ไปข้างหน้า
+                if row - start_row == 1 and abs(col - start_col) == 1:
+                    return True
+                elif row - start_row == 2 and abs(col - start_col) == 2:
+                    mid_row = (start_row + row) // 2
+                    mid_col = (start_col + col) // 2
+                    if self.board[mid_row][mid_col] != 0 and self.board[mid_row][mid_col] not in [1, 3]:
+                        return True
+            elif direction == -1:  # เคลื่อนที่ไปข้างหลัง
+                if row - start_row == -1 and abs(col - start_col) == 1:
+                    return True
+                elif row - start_row == -2 and abs(col - start_col) == 2:
+                    mid_row = (start_row + row) // 2
+                    mid_col = (start_col + col) // 2
+                    if self.board[mid_row][mid_col] != 0 and self.board[mid_row][mid_col] not in [1, 3]:
+                        return True
 
-        # เคลื่อนที่ 1 ช่องไปข้างหน้า
-        if (row - start_row) == direction and abs(col - start_col) == 1:
-            return True
+        elif piece in [2, 4]:  # ทีมสีน้ำเงิน
+            direction = -1 if piece == 2 else 1
+            if direction == -1:  # เคลื่อนที่ไปข้างหน้า
+                if row - start_row == -1 and abs(col - start_col) == 1:
+                    return True
+                elif row - start_row == -2 and abs(col - start_col) == 2:
+                    mid_row = (start_row + row) // 2
+                    mid_col = (start_col + col) // 2
+                    if self.board[mid_row][mid_col] != 0 and self.board[mid_row][mid_col] not in [2, 4]:
+                        return True
+            elif direction == 1:  # เคลื่อนที่ไปข้างหลัง
+                if row - start_row == 1 and abs(col - start_col) == 1:
+                    return True
+                elif row - start_row == 2 and abs(col - start_col) == 2:
+                    mid_row = (start_row + row) // 2
+                    mid_col = (start_col + col) // 2
+                    if self.board[mid_row][mid_col] != 0 and self.board[mid_row][mid_col] not in [2, 4]:
+                        return True
 
-        # กินหมาก
-        if (row - start_row) == 2 * direction and abs(col - start_col) == 2:
-            mid_row = (start_row + row) // 2
-            mid_col = (start_col + col) // 2
-            if self.board[mid_row][mid_col] != 0 and self.board[mid_row][mid_col] != piece:
-                return True
+        if piece in [3, 4]:  # คิง
+            directions = [(-1, -1), (-1, 1), (1, -1), (1, 1)]
+            for drow, dcol in directions:
+                row_check = start_row
+                col_check = start_col
+                while True:
+                    row_check += drow
+                    col_check += dcol
+                    if 0 <= row_check < 8 and 0 <= col_check < 8:
+                        if row_check == row and col_check == col:
+                            # ตรวจสอบว่าหมากที่กินเป็นของฝ่ายตรงข้ามหรือไม่
+                            if self.board[row_check][col_check] not in [piece, 1, 3, 2, 4]:
+                                mid_row = (start_row + row_check) // 2
+                                mid_col = (start_col + col_check) // 2
+                                if self.board[mid_row][mid_col] == 0:
+                                    return True
+                            break
+                        if self.board[row_check][col_check] != 0:
+                            # หากพบหมากของฝ่ายตรงข้าม
+                            if self.board[row_check][col_check] not in [piece, 1, 3, 2, 4]:
+                                mid_row = (start_row + row_check) // 2
+                                mid_col = (start_col + col_check) // 2
+                                # ตรวจสอบว่ามีช่องว่างสำหรับการกิน
+                                if self.board[mid_row][mid_col] == 0:
+                                    return True
+                            break
+                    else:
+                        break
 
         return False
+
 
     def move_piece(self, row, col):
         start_row, start_col = self.selected_piece
@@ -156,30 +221,56 @@ class Checkers:
 
         # อัปเดต UI
         self.buttons[start_row][start_col].config(text="", bg="lightgray" if (start_row + start_col) % 2 == 0 else "darkgray")
-        self.buttons[row][col].config(text="🔴" if piece == 1 else "🔵", fg="red" if piece == 1 else "blue")
+        
+        # แสดงหมากที่เดินไป แต่ไม่เปลี่ยนสีของหมาก
+        if piece == 1:  # หมากแดง
+            self.buttons[row][col].config(text="🔴", fg="red")
+        elif piece == 2:  # หมากน้ำเงิน
+            self.buttons[row][col].config(text="🔵", fg="blue")
+        elif piece == 3:  # คิงแดง
+            self.buttons[row][col].config(text="👑", fg="red")
+        elif piece == 4:  # คิงน้ำเงิน
+            self.buttons[row][col].config(text="👑", fg="blue")
 
-        # ถ้ากินหมากต้องอัปเดตตำแหน่งที่กิน
-        if abs(row - start_row) == 2:
+        # ตรวจสอบการเปลี่ยนหมากเป็นคิง
+        if piece == 1 and row == 7:  # หมากแดงกลายเป็นคิง
+            self.board[row][col] = 3
+            self.buttons[row][col].config(text="👑", fg="red")
+        elif piece == 2 and row == 0:  # หมากน้ำเงินกลายเป็นคิง
+            self.board[row][col] = 4
+            self.buttons[row][col].config(text="👑", fg="blue")
+
+        # อัปเดตช่องที่ถูกกิน
+        if abs(row - start_row) >= 2 and abs(col - start_col) >= 2:
             mid_row = (start_row + row) // 2
             mid_col = (start_col + col) // 2
-            self.board[mid_row][mid_col] = 0  # อัปเดตช่องที่ถูกกินเป็นช่องว่าง
-            self.buttons[mid_row][mid_col].config(text="", bg="lightgray" if (mid_row + mid_col) % 2 == 0 else "darkgray")
 
-        # เพิ่มคะแนนหลังจากการกินหมาก
-            if self.current_player == "แดง":
-                self.red_score += 1
-            else:
-                self.blue_score += 1
+            # ตรวจหาและอัปเดตช่องที่ถูกกินตามทิศทางของการเดิน
+            step_row = (row - start_row) // abs(row - start_row)
+            step_col = (col - start_col) // abs(col - start_col)
 
+            check_row, check_col = start_row + step_row, start_col + step_col
+            while check_row != row and check_col != col:
+                if self.board[check_row][check_col] != 0 and self.board[check_row][check_col] != piece:
+                    self.board[check_row][check_col] = 0
+                    self.buttons[check_row][check_col].config(text="", bg="lightgray" if (check_row + check_col) % 2 == 0 else "darkgray")
+                    
+                    # เพิ่มคะแนนหลังจากการกินหมาก
+                    if self.current_player == "แดง":
+                        self.red_score += 1
+                    else:
+                        self.blue_score += 1
+                check_row += step_row
+                check_col += step_col
+        # อัปเดตคะแนนใน UI
         self.update_score_display()
 
     def update_score_display(self):
-        # อัปเดตคะแนนใน Label
         self.score_label.config(text=f"แดง: {self.red_score}   น้ำเงิน: {self.blue_score}")
 
     def check_for_winner(self):
-        red_count = sum(piece == 1 for row in self.board for piece in row)
-        blue_count = sum(piece == 2 for row in self.board for piece in row)
+        red_count = sum(piece in [1, 3] for row in self.board for piece in row)
+        blue_count = sum(piece in [2, 4] for row in self.board for piece in row)
 
         if red_count == 0:
             messagebox.showinfo("ผู้ชนะ", "ผู้เล่นน้ำเงินชนะ!")
@@ -198,7 +289,6 @@ class Checkers:
         self.initialize_pieces()
 
     def save_game(self):
-        # เซฟสถานะเกมลงไฟล์ .txt
         game_data = {
             "board": self.board,
             "current_player": self.current_player,
@@ -206,20 +296,17 @@ class Checkers:
             "blue_score": self.blue_score
         }
 
-        # ใช้ file dialog เพื่อเลือกตำแหน่งบันทึกไฟล์
         file_path = filedialog.asksaveasfilename(defaultextension=".txt", filetypes=[("Text files", "*.txt")])
         if file_path:
             try:
-                with open(file_path, "w", encoding="utf-8") as file:  # ระบุ encoding เป็น 'utf-8'
-                    # เขียนข้อมูลเกมลงในไฟล์
+                with open(file_path, "w", encoding="utf-8") as file:
                     file.write(f"Current Player: {self.current_player}\n")
                     file.write(f"Red Score: {self.red_score}\n")
                     file.write(f"Blue Score: {self.blue_score}\n")
                     file.write("Board:\n")
                     
-                    # เขียนบอร์ดลงในไฟล์
                     for row in self.board:
-                        file.write(" ".join(map(str, row)) + "\n")  # เขียนแถวของบอร์ดเป็นข้อความ
+                        file.write(" ".join(map(str, row)) + "\n")
                     
                     messagebox.showinfo("สำเร็จ", "เซฟเกมเสร็จสิ้น")
             except Exception as e:
@@ -228,43 +315,42 @@ class Checkers:
             messagebox.showwarning("ไม่ได้เลือกไฟล์", "โปรดเลือกตำแหน่งในการบันทึกไฟล์")
 
     def load_game(self):
-        # โหลดสถานะเกมจากไฟล์ .txt
         file_path = filedialog.askopenfilename(defaultextension=".txt", filetypes=[("Text files", "*.txt")])
         if file_path:
             try:
-                with open(file_path, "r", encoding="utf-8") as file:  # ระบุ encoding เป็น 'utf-8'
-                    lines = file.readlines()  # อ่านข้อมูลทั้งหมดในไฟล์
+                with open(file_path, "r", encoding="utf-8") as file:
+                    lines = file.readlines()
 
-                # แยกข้อมูลจากไฟล์
-                self.current_player = lines[0].strip().split(": ")[1]  # อ่าน Current Player
-                self.red_score = int(lines[1].strip().split(": ")[1])  # อ่าน Red Score
-                self.blue_score = int(lines[2].strip().split(": ")[1])  # อ่าน Blue Score
+                self.current_player = lines[0].strip().split(": ")[1]
+                self.red_score = int(lines[1].strip().split(": ")[1])
+                self.blue_score = int(lines[2].strip().split(": ")[1])
 
-                # โหลดข้อมูลบอร์ด
                 self.board = []
-                for line in lines[4:]:  # ข้ามบรรทัดที่เป็นหัวข้อ "Board:"
-                    row = list(map(int, line.strip().split()))  # แปลงบรรทัดเป็นแถวของบอร์ด
+                for line in lines[4:]:
+                    row = list(map(int, line.strip().split()))
                     self.board.append(row)
 
-                # รีเฟรช UI
-                self.update_score_display()  # อัปเดตคะแนนใน UI
-                self.turn_label.config(text=f"ตาผู้เล่น: {self.current_player}")  # อัปเดตตาผู้เล่น
+                self.update_score_display()
+                self.turn_label.config(text=f"ตาผู้เล่น: {self.current_player}")
 
-                # อัปเดต UI ของบอร์ด
                 for row in range(8):
                     for col in range(8):
                         piece = self.board[row][col]
                         if piece == 1:
-                            self.buttons[row][col].config(text="🔴", fg="red")  # หมากแดง
+                            self.buttons[row][col].config(text="🔴", fg="red")
                         elif piece == 2:
-                            self.buttons[row][col].config(text="🔵", fg="blue")  # หมากน้ำเงิน
+                            self.buttons[row][col].config(text="🔵", fg="blue")
+                        elif piece == 3:
+                            self.buttons[row][col].config(text="👑", fg="red")  # คิงแดง
+                        elif piece == 4:
+                            self.buttons[row][col].config(text="👑", fg="blue")  # คิงน้ำเงิน
                         else:
                             self.buttons[row][col].config(text="", bg="lightgray" if (row + col) % 2 == 0 else "darkgray")
 
-                messagebox.showinfo("สำเร็จ", "โหลดเกมเสร็จสิ้น")  # แสดงข้อความเมื่อโหลดเกมเสร็จ
+                messagebox.showinfo("สำเร็จ", "โหลดเกมเสร็จสิ้น")
 
             except Exception as e:
-                messagebox.showerror("เกิดข้อผิดพลาด", f"ไม่สามารถโหลดไฟล์ได้: {e}")  # แจ้งข้อผิดพลาด
+                messagebox.showerror("เกิดข้อผิดพลาด", f"ไม่สามารถโหลดไฟล์ได้: {e}")
         else:
             messagebox.showwarning("ไม่ได้เลือกไฟล์", "โปรดเลือกไฟล์ที่ต้องการโหลด")
 
